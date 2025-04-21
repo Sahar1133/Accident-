@@ -16,6 +16,10 @@ st.title("Feature Selection using Information Gain with Multiple Classifiers")
 
 # File uploader
 uploaded_file = st.file_uploader("Upload Excel dataset (.xlsx)", type=["xlsx"])
+
+# Initialize results_df outside the if block to an empty DataFrame
+results_df = pd.DataFrame(columns=["Model", "Threshold", "Accuracy", "Precision", "Recall"])  
+
 if uploaded_file is not None:
     data = pd.read_excel(uploaded_file)
     st.subheader("Dataset Preview")
@@ -93,7 +97,7 @@ if uploaded_file is not None:
                 "Recall": rec
             })
 
-    results_df = pd.DataFrame(results)
+    results_df = pd.DataFrame(results) # Assign the DataFrame to results_df inside the if block
 
     st.subheader("Performance Summary")
     st.dataframe(results_df)
@@ -120,3 +124,25 @@ if uploaded_file is not None:
         st.markdown(f"**{metric}:** Best Model: `{results_df.loc[idx, 'Model']}`, "
                     f"Threshold: `{results_df.loc[idx, 'Threshold']}`, "
                     f"Score: `{results_df.loc[idx, metric]:.2f}`")
+        
+# Visualization Pilot: Accuracy vs. Information Gain Threshold
+st.subheader("Visualization Pilot: Accuracy vs. Information Gain Threshold")
+
+# Check if results_df is empty before proceeding with Visualization Pilot
+if not results_df.empty:  # This condition prevents the error if results_df is empty
+    fig_acc, ax_acc = plt.subplots(figsize=(8, 5))
+
+    for model in results_df['Model'].unique():
+        model_data = results_df[results_df['Model'] == model]
+        ax_acc.plot(model_data['Threshold'], model_data['Accuracy'], marker='o', label=model)
+
+    ax_acc.set_title("Accuracy vs. Information Gain Threshold")
+    ax_acc.set_xlabel("Information Gain Threshold")
+    ax_acc.set_ylabel("Accuracy")
+    ax_acc.set_ylim(0, 1.1)
+    ax_acc.legend()
+    ax_acc.grid(True)
+
+    st.pyplot(fig_acc)
+else:
+    st.write("Please upload a dataset to generate the visualization.") # Inform the user if no data is available
