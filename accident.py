@@ -99,6 +99,43 @@ if uploaded_file is not None:
 
     results_df = pd.DataFrame(results) # Assign the DataFrame to results_df inside the if block
 
+
+# Filter data for the selected threshold  -- Moved outside the initial 'if' block
+filtered_df = results_df[results_df["Threshold"] == selected_threshold] if 'selected_threshold' in locals() else pd.DataFrame(columns=["Model", "Threshold", "Accuracy", "Precision", "Recall"])
+
+if not filtered_df.empty:
+    st.subheader(f"Model Comparison at Threshold = {selected_threshold}")
+    
+    # Melt the dataframe to long format for easier plotting
+    melted_df = filtered_df.melt(id_vars=["Model"], 
+                                 value_vars=["Accuracy", "Precision", "Recall"], 
+                                 var_name="Metric", 
+                                 value_name="Score")
+
+    # Create a grouped bar chart
+    fig_bar, ax_bar = plt.subplots(figsize=(8, 5))
+    metrics = melted_df['Metric'].unique()
+    models = melted_df['Model'].unique()
+    bar_width = 0.2
+    x = np.arange(len(models))
+
+    for i, metric in enumerate(metrics):
+        scores = melted_df[melted_df['Metric'] == metric]['Score']
+        ax_bar.bar(x + i * bar_width, scores, width=bar_width, label=metric)
+
+    ax_bar.set_xticks(x + bar_width)
+    ax_bar.set_xticklabels(models)
+    ax_bar.set_ylim(0, 1.1)
+    ax_bar.set_ylabel("Score")
+    ax_bar.set_title("Accuracy, Precision & Recall Comparison by Model")
+    ax_bar.legend()
+    ax_bar.grid(True)
+
+    st.pyplot(fig_bar)
+else:
+    st.warning("No features selected for this threshold. Please choose a lower threshold.")
+
+if uploaded_file is not None:
     st.subheader("Performance Summary")
     st.dataframe(results_df)
 
